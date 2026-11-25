@@ -1,0 +1,2491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="tool">
+  <meta name="design-style" content="vitals">
+  <title>Group Trip Kitty — Common Fund Tracker (THB)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* 1. Vitals Style Tokens */
+      --background: #ffffff;
+      --surface-container-low: #f1f7f8;
+      --surface-container: #e3f1f3;
+      --surface-container-high: #d5e9ec;
+
+      --on-surface: #1b2b33;
+      --on-surface-variant: #46585f;
+
+      --outline: #7b9198;
+      --outline-variant: #d5e3e5;
+
+      --primary: #0f7c8a;
+      --primary-hover: #0b636f;
+      --on-primary: #ffffff;
+      --primary-container: #e3f1f3;
+      --on-primary-container: #0a5560;
+      --secondary: #1d5e3a;
+      --tertiary: #2e7d4f;
+      --error: #b3261e;
+      --error-hover: #8f1d17;
+      --on-error: #ffffff;
+
+      --data-1: #0f7c8a;
+      --data-2: #2e7d4f;
+      --data-3: #b86e00;
+      --data-4: #5c5fb0;
+      --data-context: #b8c7ca;
+
+      --font-headline: 'Figtree', sans-serif;
+      --font-body: 'Atkinson Hyperlegible', sans-serif;
+      --font-label: 'Figtree', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --rounded: 0.625rem;
+      --rounded-lg: 0.875rem;
+      --rounded-sm: 0.25rem;
+      --rounded-full: 9999px;
+
+      --top-bar: 6px solid var(--primary);
+      --status-bar-width: 4px;
+      --card-border: 1px solid var(--outline-variant);
+      --card-lift: 0 1px 2px rgb(27 43 51 / 0.05), 0 6px 16px rgb(27 43 51 / 0.05);
+
+      /* 2. Shared Tokens */
+      --positive: #2e7d4f;
+      --positive-container: #e6f3ec;
+      --warning: #b86e00;
+      --warning-container: #fdf3e2;
+      --warning-text: #7a4800;
+      --error-container: #fceceb;
+      --focus: #0f7c8a;
+      --backdrop: rgb(27 43 51 / 0.48);
+
+      /* Type scale — Focused Tool */
+      --display-size: clamp(1.65rem, 1.3rem + 1.4vw, 2.25rem);
+      --headline-size: clamp(1.1875rem, 1.05rem + 0.45vw, 1.4375rem);
+      --subhead-size: clamp(1.03125rem, 0.98rem + 0.2vw, 1.125rem);
+      --body-size: clamp(0.9375rem, 0.91rem + 0.12vw, 1rem);
+      --label-size: 0.75rem;
+      --metric-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+
+      /* Spacing scale */
+      --space-2xs: 0.125rem;
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    /* Base reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background-color: var(--surface-container-low);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    header { position: static !important; }
+    button, input, select, textarea { font-family: inherit; }
+
+    .app-shell {
+      border-top: var(--top-bar);
+      min-height: 100vh;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-lg);
+      padding: var(--space-md);
+      max-width: 1120px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    .page-grid * { min-width: 0; }
+
+    @media (min-width: 641px) {
+      .page-grid {
+        padding: var(--space-lg);
+      }
+    }
+
+    /* Header / Top Utility */
+    .app-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding-bottom: var(--space-sm);
+    }
+
+    .title-block {
+      flex: 1 1 280px;
+    }
+
+    .kicker {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--on-primary-container);
+      margin: 0 0 var(--space-xs) 0;
+    }
+
+    .title {
+      font-family: var(--font-headline);
+      font-weight: 800;
+      font-size: var(--display-size);
+      letter-spacing: -0.015em;
+      line-height: 1.08;
+      color: var(--on-surface);
+      margin: 0;
+    }
+
+    .lede {
+      font-size: var(--body-size);
+      line-height: 1.55;
+      color: var(--on-surface-variant);
+      max-width: 62ch;
+      margin: var(--space-xs) 0 0 0;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Reassurance & Status Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--label-size);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--rounded-full);
+      background: var(--positive-container);
+      color: var(--secondary);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .chip[data-status="info"] {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+    .chip[data-status="warn"] {
+      background: var(--warning-container);
+      color: var(--warning-text);
+    }
+    .chip[data-status="alert"] {
+      background: var(--error-container);
+      color: var(--error);
+    }
+    .chip-btn {
+      cursor: pointer;
+      min-height: 44px;
+      border: 1px solid var(--outline-variant);
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+    .chip-btn:hover {
+      background: var(--surface-container-high);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: var(--body-size);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  color var(--dur-micro) var(--ease-out),
+                  box-shadow var(--dur-micro) var(--ease-out),
+                  transform var(--dur-micro) var(--ease-out);
+    }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+    .btn-danger {
+      background: var(--error);
+      color: var(--on-error);
+    }
+    .btn-danger:hover:not(:disabled) { background: var(--error-hover); }
+
+    .btn-secondary {
+      background: var(--background);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn-secondary:hover:not(:disabled) { background: var(--surface-container-low); }
+
+    .btn-ghost {
+      background: var(--background);
+      color: var(--on-surface);
+      border-color: var(--outline-variant);
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface-container-low); }
+
+    .btn-sm {
+      min-height: 44px;
+      padding: var(--space-xs) var(--space-sm);
+      font-size: 0.875rem;
+    }
+
+    /* Focus rings */
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Vitals Status Cards (Telemetry Strip) */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+    @media (min-width: 820px) {
+      .telemetry-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 440px) {
+      .telemetry-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .status-card {
+      background: var(--background);
+      border: var(--card-border);
+      border-left: var(--status-bar-width) solid var(--primary);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+      box-shadow: var(--card-lift);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .status-card[data-status="ok"] { border-left-color: var(--tertiary); }
+    .status-card[data-status="warn"] { border-left-color: var(--warning); }
+    .status-card[data-status="alert"] { border-left-color: var(--error); }
+
+    .metric-label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+    }
+    .metric-value {
+      font-family: var(--font-headline);
+      font-weight: 800;
+      font-size: var(--metric-size);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      color: var(--on-surface);
+      letter-spacing: -0.02em;
+    }
+    .metric-caption {
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+      margin-top: auto;
+    }
+    .metric-caption[data-tone="ok"] { color: var(--secondary); font-weight: 700; }
+    .metric-caption[data-tone="warn"] { color: var(--warning-text); font-weight: 700; }
+    .metric-caption[data-tone="alert"] { color: var(--error); font-weight: 700; }
+
+    /* Telemetry Bar Card (Collected vs Spent + Round Progress) */
+    .panel {
+      background: var(--background);
+      border: var(--card-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+      box-shadow: var(--card-lift);
+    }
+    @media (min-width: 641px) {
+      .panel { padding: var(--space-lg); }
+    }
+
+    .panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .panel-title {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: var(--headline-size);
+      letter-spacing: -0.015em;
+      line-height: 1.2;
+      color: var(--on-surface);
+      margin: 0;
+    }
+
+    .meter-group {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-md);
+    }
+    @media (min-width: 720px) {
+      .meter-group {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--space-lg);
+      }
+    }
+
+    .meter-block {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .meter-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-sm);
+      font-size: 0.875rem;
+    }
+    .meter-track {
+      position: relative;
+      height: 12px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container);
+      overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%;
+      border-radius: var(--rounded-full);
+      background: var(--primary);
+      transition: width var(--dur-short) var(--ease-out);
+    }
+    .meter-fill.is-ok { background: var(--tertiary); }
+    .meter-fill.is-warn { background: var(--warning); }
+    .meter-fill.is-alert { background: var(--error); }
+
+    /* Main Interactive Workspace: 2-col desktop, 1-col mobile */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+    @media (min-width: 900px) {
+      .workspace-grid {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      }
+    }
+
+    /* Segmented Role Tabs */
+    .role-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-sm);
+      background: var(--surface-container-low);
+      padding: var(--space-xs);
+      border-radius: var(--rounded);
+      border: var(--card-border);
+      margin-bottom: var(--space-md);
+    }
+
+    .role-tab {
+      min-height: 44px;
+      border: none;
+      border-radius: calc(var(--rounded) - 2px);
+      background: transparent;
+      color: var(--on-surface-variant);
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      padding: var(--space-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+    .role-tab[aria-selected="true"] {
+      background: var(--background);
+      color: var(--primary);
+      box-shadow: var(--card-lift);
+    }
+    .role-tab[aria-selected="true"][data-role="fc"] {
+      color: var(--error);
+    }
+
+    /* Form Controls */
+    .form-stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .field-label {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--on-surface);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .field-hint {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+      font-weight: 400;
+    }
+
+    .input, .select {
+      width: 100%;
+      min-height: 46px;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--background);
+      color: var(--on-surface);
+      border: 1px solid var(--outline);
+      border-radius: var(--rounded);
+      font-size: 1rem;
+      transition: border-color var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
+    }
+    .select {
+      padding-right: var(--space-xl);
+    }
+    .input:focus, .select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-container);
+    }
+
+    /* Member Picker Grid (Mobile-first 1-tap selection) */
+    .member-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-sm);
+    }
+    @media (min-width: 480px) {
+      .member-picker-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+    }
+
+    .member-pick-btn {
+      min-height: 48px;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--rounded);
+      border: 1px solid var(--outline-variant);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: var(--space-2xs);
+      text-align: left;
+      transition: background-color var(--dur-micro) var(--ease-out),
+                  border-color var(--dur-micro) var(--ease-out);
+    }
+    .member-pick-btn:hover {
+      background: var(--surface-container);
+    }
+    .member-pick-btn[aria-pressed="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--on-primary);
+    }
+    .member-pick-name {
+      font-family: var(--font-label);
+      font-weight: 700;
+      font-size: 0.875rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .member-pick-meta {
+      font-family: var(--font-label);
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.88;
+    }
+
+    /* Quick Amount Preset Pills */
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+    .preset-btn {
+      min-height: 44px;
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--rounded);
+      border: 1px solid var(--outline);
+      background: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+    .preset-btn:hover {
+      background: var(--surface-container-low);
+    }
+    .preset-btn.is-active {
+      background: var(--primary-container);
+      border-color: var(--primary);
+      color: var(--on-primary-container);
+    }
+
+    /* Form Row alignment */
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-md);
+      align-items: end;
+    }
+    @media (min-width: 520px) {
+      .form-row-2 {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+    }
+
+    /* Inline Feedback Banner */
+    .feedback-box {
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      border-left: var(--status-bar-width) solid var(--primary);
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      font-size: 0.9375rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+    .feedback-box.is-visible { display: flex; }
+    .feedback-box[data-tone="ok"] {
+      background: var(--positive-container);
+      border-left-color: var(--tertiary);
+      color: var(--secondary);
+    }
+    .feedback-box[data-tone="warn"] {
+      background: var(--warning-container);
+      border-left-color: var(--warning);
+      color: var(--warning-text);
+    }
+    .feedback-box[data-tone="alert"] {
+      background: var(--error-container);
+      border-left-color: var(--error);
+      color: var(--error);
+    }
+
+    /* Member Roster Summary Table / Cards */
+    .roster-list {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-sm);
+    }
+    @media (min-width: 520px) {
+      .roster-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    .roster-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      border: var(--card-border);
+      border-radius: var(--rounded);
+      background: var(--surface-container-low);
+      cursor: pointer;
+      min-height: 52px;
+      text-align: left;
+      width: 100%;
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+    .roster-item:hover {
+      background: var(--surface-container);
+    }
+    .roster-name {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: var(--on-surface);
+    }
+    .roster-sub {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+    }
+    .roster-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-2xs);
+      flex-shrink: 0;
+    }
+    .roster-amount {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--on-surface);
+    }
+
+    /* Category Breakdown Bars */
+    .cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .cat-row {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xs);
+    }
+    .cat-row-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      gap: var(--space-sm);
+    }
+    .cat-track {
+      height: 8px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container-low);
+      overflow: hidden;
+    }
+    .cat-fill {
+      height: 100%;
+      border-radius: var(--rounded-full);
+      background: var(--data-1);
+    }
+
+    /* Ledger Controls & Transaction Feed */
+    .ledger-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+    .filter-pill {
+      min-height: 44px;
+      padding: var(--space-xs) var(--space-md);
+      border-radius: var(--rounded-full);
+      border: 1px solid var(--outline-variant);
+      background: var(--background);
+      color: var(--on-surface-variant);
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .filter-pill[aria-pressed="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--on-primary);
+    }
+
+    .ledger-list {
+      display: flex;
+      flex-direction: column;
+    }
+    .tx-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-xs);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+    .tx-row:last-child { border-bottom: none; }
+
+    .tx-main {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2xs);
+      flex: 1 1 220px;
+    }
+    .tx-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .tx-desc {
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+    .tx-meta {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+    .tx-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-left: auto;
+    }
+    .tx-amount-col {
+      text-align: right;
+    }
+    .tx-amount {
+      font-family: var(--font-headline);
+      font-weight: 800;
+      font-size: 1.0625rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .tx-amount.is-credit { color: var(--secondary); }
+    .tx-amount.is-debit { color: var(--error); }
+    .tx-running {
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md);
+      background: var(--surface-container-low);
+      border: 1px dashed var(--outline);
+      border-radius: var(--rounded-lg);
+      color: var(--on-surface-variant);
+    }
+    .empty-state p {
+      margin: var(--space-xs) auto var(--space-md);
+      max-width: 46ch;
+    }
+
+    /* Settings Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: var(--space-sm);
+      z-index: 50;
+    }
+    @media (min-width: 641px) {
+      .modal-backdrop {
+        align-items: center;
+        padding: var(--space-lg);
+      }
+    }
+    .modal-backdrop.is-open { display: flex; }
+
+    .modal-card {
+      width: 100%;
+      max-width: 600px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: var(--background);
+      border-radius: var(--rounded-lg);
+      border: var(--card-border);
+      border-top: var(--top-bar);
+      padding: var(--space-lg);
+      box-shadow: var(--card-lift);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .mono-code {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      background: var(--surface-container-low);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--rounded);
+      border: var(--card-border);
+      overflow-x: auto;
+      color: var(--on-surface);
+      white-space: pre;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 640px) {
+      .page-grid {
+        grid-template-columns: minmax(0, 1fr);
+        padding: var(--space-sm);
+        gap: var(--space-md);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <main class="page-grid">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="title-block">
+          <p class="kicker">10-Member Common Fund · Thailand Trip Kitty</p>
+          <h1 class="title">Group Trip Kitty Ledger</h1>
+          <p class="lede">
+            Track shared THB cash contributions in 1,000 THB rounds and log Fund Coordinator (FC) trip expenses with GitHub <span style="font-family: var(--font-mono);">data.json</span> sync.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" id="sync-status-btn" class="chip chip-btn" data-status="info" onclick="openSettingsModal()">
+            <span id="sync-status-label">Local Mode · Configure GitHub</span>
+          </button>
+          <button type="button" id="sync-pull-btn" class="btn btn-ghost btn-sm" onclick="pullFromGitHub()" title="Fetch latest data.json from GitHub">
+            Pull GET
+          </button>
+          <button type="button" id="open-settings-btn" class="btn btn-secondary btn-sm" onclick="openSettingsModal()">
+            Settings
+          </button>
+        </div>
+      </header>
+
+      <!-- Global Inline Feedback Banner -->
+      <div id="global-feedback" class="feedback-box" role="status" aria-live="polite">
+        <span id="global-feedback-text"></span>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="dismissFeedback()">Dismiss</button>
+      </div>
+
+      <!-- Key Telemetry Strip (Current State Up Front) -->
+      <section aria-label="Fund balance summary" class="telemetry-grid">
+        <article id="card-balance" class="status-card" data-status="info">
+          <span class="metric-label">Remaining Cash Balance</span>
+          <span id="val-balance" class="metric-value">฿0</span>
+          <span id="cap-balance" class="metric-caption">Ready for Round 1 contributions</span>
+        </article>
+
+        <article class="status-card" data-status="ok">
+          <span class="metric-label">Total Collected</span>
+          <span id="val-collected" class="metric-value">฿0</span>
+          <span id="cap-collected" class="metric-caption">0 contribution entries</span>
+        </article>
+
+        <article class="status-card" data-status="alert">
+          <span class="metric-label">Total Spent</span>
+          <span id="val-spent" class="metric-value">฿0</span>
+          <span id="cap-spent" class="metric-caption">0 expense entries</span>
+        </article>
+
+        <article id="card-round" class="status-card" data-status="info">
+          <span class="metric-label">Active Contribution Round</span>
+          <span id="val-round" class="metric-value">Round 1</span>
+          <span id="cap-round" class="metric-caption">0 / 10 members paid (฿1,000 target)</span>
+        </article>
+      </section>
+
+      <!-- Telemetry Bars: Collected vs Spent & Active Round Progress -->
+      <section class="panel" aria-label="Fund utilization and round progress">
+        <div class="meter-group">
+          <div class="meter-block">
+            <div class="meter-row">
+              <strong>Cash Utilization (Spent vs Collected)</strong>
+              <span id="util-ratio-label" style="font-variant-numeric: tabular-nums;">0% spent</span>
+            </div>
+            <div class="meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="util-bar-track">
+              <div id="util-bar-fill" class="meter-fill" style="width: 0%;"></div>
+            </div>
+            <span id="util-caption" class="field-hint">Remaining cash reserve: ฿0 of ฿0 collected</span>
+          </div>
+
+          <div class="meter-block">
+            <div class="meter-row">
+              <strong id="round-meter-title">Round 1 Completion (10 × ฿1,000)</strong>
+              <span id="round-ratio-label" style="font-variant-numeric: tabular-nums;">0 / ฿10,000</span>
+            </div>
+            <div class="meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="round-bar-track">
+              <div id="round-bar-fill" class="meter-fill is-ok" style="width: 0%;"></div>
+            </div>
+            <span id="round-caption" class="field-hint">10 members pending for Round 1</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Interactive Workspace -->
+      <section class="workspace-grid">
+        <!-- Left: Entry Console (Member Contribution OR FC Expense) -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Record Transaction</h2>
+            <span id="active-role-chip" class="chip" data-status="ok">Member Credit (+)</span>
+          </div>
+
+          <div class="role-tabs" role="tablist" aria-label="Transaction mode">
+            <button
+              type="button"
+              id="tab-member"
+              class="role-tab"
+              role="tab"
+              aria-selected="true"
+              data-role="member"
+              onclick="switchMode('member')"
+            >
+              + Member Cash-In
+            </button>
+            <button
+              type="button"
+              id="tab-fc"
+              class="role-tab"
+              role="tab"
+              aria-selected="false"
+              data-role="fc"
+              onclick="switchMode('fc')"
+            >
+              − FC Expense
+            </button>
+          </div>
+
+          <!-- Member Contribution Form -->
+          <form id="form-contribution" class="form-stack" onsubmit="submitContribution(event)">
+            <div class="field">
+              <label class="field-label" for="contrib-member-select">
+                <span>1. Select Your Name (Alphabetical)</span>
+                <span class="field-hint">Tap a name below</span>
+              </label>
+              <div id="member-picker-grid" class="member-picker-grid" role="group" aria-label="Select member"></div>
+              <select id="contrib-member-select" class="select sr-only" onchange="selectMemberFromDropdown(this.value)">
+                <option value="">Choose member…</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <span class="field-label">2. Quick Round or Custom Amount (THB)</span>
+              <div class="preset-row">
+                <button type="button" id="preset-1000" class="preset-btn is-active" onclick="setContributionPreset(1000, this)">
+                  +฿1,000 (1 Round)
+                </button>
+                <button type="button" id="preset-2000" class="preset-btn" onclick="setContributionPreset(2000, this)">
+                  +฿2,000 (2 Rounds)
+                </button>
+                <button type="button" id="preset-500" class="preset-btn" onclick="setContributionPreset(500, this)">
+                  +฿500
+                </button>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="field">
+                <label class="field-label" for="contrib-amount">Amount (THB)</label>
+                <input
+                  id="contrib-amount"
+                  class="input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value="1000"
+                  required
+                  oninput="clearPresetHighlight()"
+                >
+              </div>
+              <div class="field">
+                <label class="field-label" for="contrib-note">Note (Optional)</label>
+                <input
+                  id="contrib-note"
+                  class="input"
+                  type="text"
+                  maxlength="80"
+                  placeholder="e.g. Round 1 cash to FC"
+                >
+              </div>
+            </div>
+
+            <div id="contrib-error" class="feedback-box" data-tone="alert" role="alert">
+              <span id="contrib-error-text"></span>
+            </div>
+
+            <button type="submit" id="contrib-submit-btn" class="btn btn-primary">
+              Record Cash Contribution (+THB)
+            </button>
+          </form>
+
+          <!-- Fund Coordinator (FC) Expense Form -->
+          <form id="form-expense" class="form-stack" style="display: none;" onsubmit="submitExpense(event)">
+            <div class="field">
+              <label class="field-label" for="fc-role-select">
+                <span>Fund Coordinator (FC) Role</span>
+                <span class="field-hint">Who is paying from kitty?</span>
+              </label>
+              <select id="fc-role-select" class="select" onchange="updateSelectedFc(this.value)">
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="expense-desc">Expense Description</label>
+              <input
+                id="expense-desc"
+                class="input"
+                type="text"
+                maxlength="120"
+                placeholder="Day 1 - Lunch at Curvy Dining"
+                required
+              >
+            </div>
+
+            <div class="form-row-2">
+              <div class="field">
+                <label class="field-label" for="expense-category">Meal / Trip Category</label>
+                <select id="expense-category" class="select">
+                  <option value="Meals — Lunch">Meals — Lunch</option>
+                  <option value="Meals — Dinner">Meals — Dinner</option>
+                  <option value="Meals — Breakfast">Meals — Breakfast</option>
+                  <option value="Café & Drinks">Café &amp; Drinks</option>
+                  <option value="Transport & Boats">Transport &amp; Boats</option>
+                  <option value="Lodging & Resorts">Lodging &amp; Resorts</option>
+                  <option value="Parks & Activities">Parks &amp; Activities</option>
+                  <option value="Group Supplies">Group Supplies</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="expense-amount">Amount Spent (THB)</label>
+                <input
+                  id="expense-amount"
+                  class="input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g. 1450"
+                  required
+                >
+              </div>
+            </div>
+
+            <div id="expense-error" class="feedback-box" data-tone="alert" role="alert">
+              <span id="expense-error-text"></span>
+            </div>
+
+            <button type="submit" id="expense-submit-btn" class="btn btn-danger">
+              Record Trip Expense (−THB)
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: 10-Member Contribution Roster & Category Spend -->
+        <div class="form-stack">
+          <section class="panel" aria-label="Member contribution standing">
+            <div class="panel-header">
+              <h2 class="panel-title">Member Kitty Standing</h2>
+              <span class="chip" data-status="info" id="roster-paid-chip">0 / 10 Paid</span>
+            </div>
+            <div id="roster-list" class="roster-list"></div>
+          </section>
+
+          <section class="panel" aria-label="Spending by category">
+            <div class="panel-header">
+              <h2 class="panel-title">Spend by Category</h2>
+              <span id="cat-total-label" class="field-hint">฿0 total</span>
+            </div>
+            <div id="category-breakdown" class="cat-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- Live Transaction Ledger -->
+      <section class="panel" aria-label="Live transaction ledger">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Live Transaction Ledger</h2>
+            <p class="field-hint" style="margin: var(--space-2xs) 0 0 0;">Chronological feed with timestamps and running kitty balance</p>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm);">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="exportJsonFile()">Export data.json</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="exportCsvFile()">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="ledger-controls">
+          <div class="filter-pills" role="group" aria-label="Filter transactions">
+            <button type="button" id="filter-all" class="filter-pill" aria-pressed="true" onclick="setLedgerFilter('all')">All (0)</button>
+            <button type="button" id="filter-credit" class="filter-pill" aria-pressed="false" onclick="setLedgerFilter('credit')">Credits + (0)</button>
+            <button type="button" id="filter-debit" class="filter-pill" aria-pressed="false" onclick="setLedgerFilter('debit')">Debits − (0)</button>
+          </div>
+          <div class="field" style="min-width: 220px; flex: 0 1 280px;">
+            <label class="field-label sr-only" for="ledger-search">Search ledger</label>
+            <input id="ledger-search" class="input" type="search" placeholder="Filter by member, note, category…" oninput="renderLedger()">
+          </div>
+        </div>
+
+        <div id="ledger-container" class="ledger-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- GitHub & Kitty Settings Modal -->
+  <div id="settings-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" onclick="if (event.target === this) closeSettingsModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="kicker" style="margin-bottom: var(--space-2xs);">Backend Configuration</p>
+          <h2 id="settings-modal-title" class="panel-title">GitHub REST API &amp; Kitty Settings</h2>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeSettingsModal()">Close</button>
+      </div>
+
+      <p class="field-hint" style="margin: 0;">
+        Connect a GitHub repository to read and write your flat <span style="font-family: var(--font-mono);">data.json</span> file via GitHub REST API (<span style="font-family: var(--font-mono);">GET</span> &amp; <span style="font-family: var(--font-mono);">PUT</span>). Your Personal Access Token requires <span style="font-family: var(--font-mono);">contents:write</span> scope.
+      </p>
+
+      <form id="settings-form" class="form-stack" onsubmit="saveSettings(event)">
+        <div class="field">
+          <label class="field-label" for="cfg-repo">GitHub Repository (owner/repo)</label>
+          <input id="cfg-repo" class="input" type="text" placeholder="e.g. andy-travel/thailand-2026-kitty" style="font-family: var(--font-mono);">
+        </div>
+
+        <div class="form-row-2">
+          <div class="field">
+            <label class="field-label" for="cfg-branch">Branch</label>
+            <input id="cfg-branch" class="input" type="text" value="main" style="font-family: var(--font-mono);">
+          </div>
+          <div class="field">
+            <label class="field-label" for="cfg-path">JSON File Path</label>
+            <input id="cfg-path" class="input" type="text" value="data.json" style="font-family: var(--font-mono);">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="cfg-pat">
+            <span>Personal Access Token (PAT)</span>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="togglePatVisibility()" id="toggle-pat-btn" style="min-height: 36px;">Show</button>
+          </label>
+          <input id="cfg-pat" class="input" type="password" autocomplete="off" placeholder="github_pat_… or ghp_…" style="font-family: var(--font-mono);">
+          <span class="field-hint">Stored in your app state so you stay synced across sessions. Leave blank for read-only public repo GET or Local Mode.</span>
+        </div>
+
+        <div class="form-row-2">
+          <div class="field">
+            <label class="field-label" for="cfg-round-amount">Round Target per Member (THB)</label>
+            <input id="cfg-round-amount" class="input" type="number" min="100" step="100" value="1000">
+          </div>
+          <div class="field">
+            <label class="field-label" for="cfg-autosync">Auto-Push on New Entry</label>
+            <select id="cfg-autosync" class="select">
+              <option value="true">Enabled (Recommended)</option>
+              <option value="false">Manual Push Only</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="settings-feedback" class="feedback-box" role="status">
+          <span id="settings-feedback-text"></span>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm);">
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+          <button type="button" class="btn btn-secondary" onclick="pullFromGitHub(true)">Test &amp; Pull (GET)</button>
+          <button type="button" class="btn btn-ghost" onclick="pushToGitHub('Manual sync from Group Trip Kitty', true)">Push Now (PUT)</button>
+        </div>
+      </form>
+
+      <div style="border-top: 1px solid var(--outline-variant); padding-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm);">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-sm);">
+          <strong>Remote SHA &amp; Payload Preview</strong>
+          <div style="display: flex; gap: var(--space-sm);">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="copyJsonPayload()">Copy JSON</button>
+            <button type="button" id="reset-data-btn" class="btn btn-ghost btn-sm" onclick="resetLedgerData(this)">Reset Ledger</button>
+          </div>
+        </div>
+        <span id="cfg-sha-display" class="field-hint" style="font-family: var(--font-mono);">Remote SHA: not synced yet</span>
+        <pre id="json-preview" class="mono-code" aria-label="data.json preview"></pre>
+      </div>
+    </div>
+  </div>
+
+  <api-shim></api-shim>
+  <script>
+    const MEMBERS = [
+      `Andy`,
+      `Cheryl`,
+      `Cindy`,
+      `Edmund`,
+      `Kim Sai`,
+      `Patricia`,
+      `Priscilla`,
+      `Rina`,
+      `Shirlyn`,
+      `Weng Wah`
+    ];
+
+    const CATEGORY_COLORS = {
+      "Meals — Lunch": `var(--data-1)`,
+      "Meals — Dinner": `var(--data-2)`,
+      "Meals — Breakfast": `var(--data-3)`,
+      "Café & Drinks": `var(--data-4)`,
+      "Transport & Boats": `var(--primary)`,
+      "Lodging & Resorts": `var(--secondary)`,
+      "Parks & Activities": `var(--tertiary)`,
+      "Group Supplies": `var(--data-context)`
+    };
+
+    const appState = {
+      mode: `member`,
+      selectedMember: `Andy`,
+      selectedFc: `Andy`,
+      ledgerFilter: `all`,
+      roundAmount: 1000,
+      transactions: [],
+      github: {
+        repo: ``,
+        branch: `main`,
+        path: `data.json`,
+        pat: ``,
+        autoSync: true,
+        remoteSha: ``,
+        lastSyncAt: ``,
+        syncStatus: `local`,
+        syncDetail: `Local Mode · Configure GitHub`
+      }
+    };
+
+    /* ---------- UTF-8 Base64 Helpers ---------- */
+    function encodeBase64Utf8(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = ``;
+      for (let i = 0; i < bytes.length; i += 1) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function decodeBase64Utf8(b64) {
+      const cleaned = b64.replace(/\s+/g, ``);
+      const binary = atob(cleaned);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+
+    function formatThb(amount) {
+      const abs = Math.abs(Math.round(amount));
+      const formatted = abs.toLocaleString(`en-US`);
+      return amount < 0 ? `-฿${formatted}` : `฿${formatted}`;
+    }
+
+    function formatTimestamp(isoStr) {
+      const d = new Date(isoStr);
+      if (Number.isNaN(d.getTime())) return isoStr;
+      return d.toLocaleString(`en-GB`, {
+        day: `2-digit`,
+        month: `short`,
+        year: `numeric`,
+        hour: `2-digit`,
+        minute: `2-digit`
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, `&amp;`)
+        .replace(/</g, `&lt;`)
+        .replace(/>/g, `&gt;`)
+        .replace(/"/g, `&quot;`)
+        .replace(/'/g, `&#39;`);
+    }
+
+    function buildDataJsonPayload() {
+      return {
+        schemaVersion: 1,
+        tripName: `Thailand Group Trip 2026`,
+        currency: `THB`,
+        roundAmount: appState.roundAmount,
+        members: MEMBERS.slice(),
+        transactions: appState.transactions.slice(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    /* ---------- Persistence via notebookAppApi ---------- */
+    async function persistState() {
+      const preview = document.getElementById(`json-preview`);
+      if (preview) {
+        preview.textContent = JSON.stringify(buildDataJsonPayload(), null, 2);
+      }
+      if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
+        try {
+          await window.notebookAppApi.setAppState({
+            selectedMember: appState.selectedMember,
+            selectedFc: appState.selectedFc,
+            roundAmount: appState.roundAmount,
+            transactions: appState.transactions,
+            github: appState.github
+          });
+        } catch (err) {
+          console.warn(`Unable to persist app state:`, err);
+        }
+      }
+    }
+
+    async function loadInitialState() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+        try {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved === `object`) {
+            if (saved.selectedMember && MEMBERS.includes(saved.selectedMember)) {
+              appState.selectedMember = saved.selectedMember;
+            }
+            if (saved.selectedFc && MEMBERS.includes(saved.selectedFc)) {
+              appState.selectedFc = saved.selectedFc;
+            }
+            if (typeof saved.roundAmount === `number` && saved.roundAmount >= 100) {
+              appState.roundAmount = saved.roundAmount;
+            }
+            if (Array.isArray(saved.transactions)) {
+              appState.transactions = saved.transactions;
+            }
+            if (saved.github && typeof saved.github === `object`) {
+              appState.github = Object.assign({}, appState.github, saved.github);
+            }
+          }
+        } catch (err) {
+          console.warn(`Unable to load saved state:`, err);
+        }
+      }
+    }
+
+    /* ---------- Derived Telemetry ---------- */
+    function computeTelemetry() {
+      const memberTotals = {};
+      MEMBERS.forEach(function (name) {
+        memberTotals[name] = 0;
+      });
+
+      let totalCollected = 0;
+      let totalSpent = 0;
+      let creditCount = 0;
+      let debitCount = 0;
+      const categoryTotals = {};
+
+      const chronological = appState.transactions
+        .slice()
+        .sort(function (a, b) {
+          return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+        });
+
+      let running = 0;
+      const runningById = {};
+
+      chronological.forEach(function (tx) {
+        const amt = Number(tx.amount) || 0;
+        if (tx.type === `credit`) {
+          totalCollected += amt;
+          creditCount += 1;
+          running += amt;
+          if (Object.prototype.hasOwnProperty.call(memberTotals, tx.member)) {
+            memberTotals[tx.member] += amt;
+          }
+        } else {
+          totalSpent += amt;
+          debitCount += 1;
+          running -= amt;
+          const cat = tx.category || `Group Supplies`;
+          categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+        }
+        runningById[tx.id] = running;
+      });
+
+      const balance = totalCollected - totalSpent;
+      const roundAmt = appState.roundAmount || 1000;
+      const memberRounds = MEMBERS.map(function (name) {
+        return Math.floor((memberTotals[name] || 0) / roundAmt);
+      });
+      const minCompletedRounds = Math.min.apply(null, memberRounds);
+      const activeRound = minCompletedRounds + 1;
+      const activeRoundPaidCount = MEMBERS.filter(function (name) {
+        return (memberTotals[name] || 0) >= activeRound * roundAmt;
+      }).length;
+
+      const prevRoundsTotal = (activeRound - 1) * MEMBERS.length * roundAmt;
+      let activeRoundCollected = 0;
+      MEMBERS.forEach(function (name) {
+        const intoActive = Math.max(0, (memberTotals[name] || 0) - (activeRound - 1) * roundAmt);
+        activeRoundCollected += Math.min(roundAmt, intoActive);
+      });
+      const activeRoundTarget = MEMBERS.length * roundAmt;
+
+      return {
+        memberTotals: memberTotals,
+        totalCollected: totalCollected,
+        totalSpent: totalSpent,
+        balance: balance,
+        creditCount: creditCount,
+        debitCount: debitCount,
+        categoryTotals: categoryTotals,
+        runningById: runningById,
+        activeRound: activeRound,
+        activeRoundPaidCount: activeRoundPaidCount,
+        activeRoundCollected: activeRoundCollected,
+        activeRoundTarget: activeRoundTarget,
+        prevRoundsTotal: prevRoundsTotal
+      };
+    }
+
+    /* ---------- Render Functions ---------- */
+    function renderAll() {
+      const stats = computeTelemetry();
+      renderTelemetry(stats);
+      renderMemberPicker(stats);
+      renderFcSelect();
+      renderRoster(stats);
+      renderCategoryBreakdown(stats);
+      renderLedger(stats);
+      renderSyncBadge();
+      const preview = document.getElementById(`json-preview`);
+      if (preview) {
+        preview.textContent = JSON.stringify(buildDataJsonPayload(), null, 2);
+      }
+    }
+
+    function renderTelemetry(stats) {
+      const valBal = document.getElementById(`val-balance`);
+      const capBal = document.getElementById(`cap-balance`);
+      const cardBal = document.getElementById(`card-balance`);
+      if (valBal && capBal && cardBal) {
+        valBal.textContent = formatThb(stats.balance);
+        if (stats.balance < 0) {
+          cardBal.setAttribute(`data-status`, `alert`);
+          capBal.setAttribute(`data-tone`, `alert`);
+          capBal.textContent = `Kitty overdrawn — top-up round needed`;
+        } else if (stats.balance === 0 && stats.totalCollected === 0) {
+          cardBal.setAttribute(`data-status`, `info`);
+          capBal.setAttribute(`data-tone`, ``);
+          capBal.textContent = `Ready for Round 1 contributions`;
+        } else if (stats.balance < 2000) {
+          cardBal.setAttribute(`data-status`, `warn`);
+          capBal.setAttribute(`data-tone`, `warn`);
+          capBal.textContent = `Low reserve — consider opening next round`;
+        } else {
+          cardBal.setAttribute(`data-status`, `ok`);
+          capBal.setAttribute(`data-tone`, `ok`);
+          capBal.textContent = `Healthy cash on hand`;
+        }
+      }
+
+      const valCol = document.getElementById(`val-collected`);
+      const capCol = document.getElementById(`cap-collected`);
+      if (valCol && capCol) {
+        valCol.textContent = formatThb(stats.totalCollected);
+        capCol.textContent = `${stats.creditCount} contribution ${stats.creditCount === 1 ? `entry` : `entries`}`;
+      }
+
+      const valSp = document.getElementById(`val-spent`);
+      const capSp = document.getElementById(`cap-spent`);
+      if (valSp && capSp) {
+        valSp.textContent = formatThb(stats.totalSpent);
+        capSp.textContent = `${stats.debitCount} expense ${stats.debitCount === 1 ? `entry` : `entries`}`;
+      }
+
+      const valRd = document.getElementById(`val-round`);
+      const capRd = document.getElementById(`cap-round`);
+      const cardRd = document.getElementById(`card-round`);
+      if (valRd && capRd && cardRd) {
+        valRd.textContent = `Round ${stats.activeRound}`;
+        capRd.textContent = `${stats.activeRoundPaidCount} / ${MEMBERS.length} members paid (${formatThb(appState.roundAmount)}/rd)`;
+        cardRd.setAttribute(`data-status`, stats.activeRoundPaidCount >= 8 ? `ok` : `info`);
+      }
+
+      // Utilization Meter
+      const utilPct = stats.totalCollected > 0
+        ? Math.min(100, Math.round((stats.totalSpent / stats.totalCollected) * 100))
+        : 0;
+      const utilLabel = document.getElementById(`util-ratio-label`);
+      const utilFill = document.getElementById(`util-bar-fill`);
+      const utilTrack = document.getElementById(`util-bar-track`);
+      const utilCaption = document.getElementById(`util-caption`);
+      if (utilLabel && utilFill && utilTrack && utilCaption) {
+        utilLabel.textContent = stats.totalCollected > 0
+          ? `${utilPct}% spent`
+          : `0% spent`;
+        utilFill.style.width = `${utilPct}%`;
+        utilFill.className = `meter-fill ${utilPct >= 90 ? `is-alert` : utilPct >= 70 ? `is-warn` : ``}`;
+        utilTrack.setAttribute(`aria-valuenow`, String(utilPct));
+        utilCaption.textContent = `Remaining cash reserve: ${formatThb(stats.balance)} of ${formatThb(stats.totalCollected)} collected`;
+      }
+
+      // Active Round Progress Meter
+      const rdPct = Math.min(100, Math.round((stats.activeRoundCollected / stats.activeRoundTarget) * 100));
+      const rdTitle = document.getElementById(`round-meter-title`);
+      const rdLabel = document.getElementById(`round-ratio-label`);
+      const rdFill = document.getElementById(`round-bar-fill`);
+      const rdTrack = document.getElementById(`round-bar-track`);
+      const rdCaption = document.getElementById(`round-caption`);
+      if (rdTitle && rdLabel && rdFill && rdTrack && rdCaption) {
+        rdTitle.textContent = `Round ${stats.activeRound} Completion (${MEMBERS.length} × ${formatThb(appState.roundAmount)})`;
+        rdLabel.textContent = `${formatThb(stats.activeRoundCollected)} / ${formatThb(stats.activeRoundTarget)}`;
+        rdFill.style.width = `${rdPct}%`;
+        rdTrack.setAttribute(`aria-valuenow`, String(rdPct));
+        const pendingCount = MEMBERS.length - stats.activeRoundPaidCount;
+        rdCaption.textContent = `${pendingCount} ${pendingCount === 1 ? `member` : `members`} pending for Round ${stats.activeRound}`;
+      }
+    }
+
+    function renderMemberPicker(stats) {
+      const grid = document.getElementById(`member-picker-grid`);
+      const select = document.getElementById(`contrib-member-select`);
+      if (!grid || !select) return;
+
+      grid.innerHTML = MEMBERS.map(function (name) {
+        const isSelected = appState.selectedMember === name;
+        const paid = stats.memberTotals[name] || 0;
+        return `
+          <button
+            type="button"
+            class="member-pick-btn"
+            aria-pressed="${isSelected ? `true` : `false`}"
+            onclick="selectMember('${escapeHtml(name)}')"
+          >
+            <span class="member-pick-name">${escapeHtml(name)}</span>
+            <span class="member-pick-meta">${formatThb(paid)}</span>
+          </button>
+        `;
+      }).join(``);
+
+      select.innerHTML = MEMBERS.map(function (name) {
+        return `<option value="${escapeHtml(name)}" ${appState.selectedMember === name ? `selected` : ``}>${escapeHtml(name)}</option>`;
+      }).join(``);
+    }
+
+    function renderFcSelect() {
+      const sel = document.getElementById(`fc-role-select`);
+      if (!sel) return;
+      sel.innerHTML = MEMBERS.map(function (name) {
+        const selected = appState.selectedFc === name ? `selected` : ``;
+        return `<option value="${escapeHtml(name)}" ${selected}>${escapeHtml(name)} (Fund Coordinator)</option>`;
+      }).join(``);
+    }
+
+    function renderRoster(stats) {
+      const list = document.getElementById(`roster-list`);
+      const chip = document.getElementById(`roster-paid-chip`);
+      if (!list || !chip) return;
+
+      const roundAmt = appState.roundAmount || 1000;
+      const targetForActive = stats.activeRound * roundAmt;
+      chip.textContent = `${stats.activeRoundPaidCount} / ${MEMBERS.length} Paid Rd ${stats.activeRound}`;
+      chip.setAttribute(`data-status`, stats.activeRoundPaidCount === MEMBERS.length ? `ok` : `info`);
+
+      list.innerHTML = MEMBERS.map(function (name) {
+        const paid = stats.memberTotals[name] || 0;
+        const completedRounds = Math.floor(paid / roundAmt);
+        const shortfall = Math.max(0, targetForActive - paid);
+        let statusText = `Due ${formatThb(shortfall)}`;
+        let chipTone = `warn`;
+        if (paid >= (stats.activeRound + 1) * roundAmt) {
+          statusText = `Rd ${completedRounds} Ahead`;
+          chipTone = `ok`;
+        } else if (shortfall === 0) {
+          statusText = `Rd ${stats.activeRound} Paid`;
+          chipTone = `ok`;
+        } else if (paid === 0) {
+          statusText = `Pending Rd ${stats.activeRound}`;
+          chipTone = `info`;
+        }
+
+        return `
+          <button type="button" class="roster-item" onclick="quickPickMemberForContrib('${escapeHtml(name)}')">
+            <div>
+              <div class="roster-name">${escapeHtml(name)}</div>
+              <div class="roster-sub">${completedRounds} ${completedRounds === 1 ? `round` : `rounds`} completed</div>
+            </div>
+            <div class="roster-right">
+              <span class="roster-amount">${formatThb(paid)}</span>
+              <span class="chip" data-status="${chipTone}" style="padding: var(--space-2xs) var(--space-sm);">${statusText}</span>
+            </div>
+          </button>
+        `;
+      }).join(``);
+    }
+
+    function renderCategoryBreakdown(stats) {
+      const container = document.getElementById(`category-breakdown`);
+      const totalLabel = document.getElementById(`cat-total-label`);
+      if (!container || !totalLabel) return;
+
+      totalLabel.textContent = `${formatThb(stats.totalSpent)} total`;
+      const entries = Object.entries(stats.categoryTotals).sort(function (a, b) {
+        return b[1] - a[1];
+      });
+
+      if (entries.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="padding: var(--space-md);">
+            <strong style="color: var(--on-surface);">No trip expenses recorded yet</strong>
+            <p style="margin-bottom: 0;">Switch to <strong>FC Expense</strong> mode to log meals, boats, parks, or resort payments.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = entries.map(function (entry) {
+        const cat = entry[0];
+        const amt = entry[1];
+        const pct = stats.totalSpent > 0 ? Math.round((amt / stats.totalSpent) * 100) : 0;
+        const color = CATEGORY_COLORS[cat] || `var(--data-1)`;
+        return `
+          <div class="cat-row">
+            <div class="cat-row-top">
+              <strong>${escapeHtml(cat)}</strong>
+              <span style="font-variant-numeric: tabular-nums;">${formatThb(amt)} (${pct}%)</span>
+            </div>
+            <div class="cat-track">
+              <div class="cat-fill" style="width: ${pct}%; background: ${color};"></div>
+            </div>
+          </div>
+        `;
+      }).join(``);
+    }
+
+    function renderLedger(passedStats) {
+      const stats = passedStats || computeTelemetry();
+      const container = document.getElementById(`ledger-container`);
+      const searchEl = document.getElementById(`ledger-search`);
+      const fAll = document.getElementById(`filter-all`);
+      const fCred = document.getElementById(`filter-credit`);
+      const fDeb = document.getElementById(`filter-debit`);
+      if (!container) return;
+
+      if (fAll) {
+        fAll.textContent = `All (${appState.transactions.length})`;
+        fAll.setAttribute(`aria-pressed`, appState.ledgerFilter === `all` ? `true` : `false`);
+      }
+      if (fCred) {
+        fCred.textContent = `Credits + (${stats.creditCount})`;
+        fCred.setAttribute(`aria-pressed`, appState.ledgerFilter === `credit` ? `true` : `false`);
+      }
+      if (fDeb) {
+        fDeb.textContent = `Debits − (${stats.debitCount})`;
+        fDeb.setAttribute(`aria-pressed`, appState.ledgerFilter === `debit` ? `true` : `false`);
+      }
+
+      const query = searchEl ? searchEl.value.trim().toLowerCase() : ``;
+
+      const filtered = appState.transactions
+        .slice()
+        .sort(function (a, b) {
+          return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        })
+        .filter(function (tx) {
+          if (appState.ledgerFilter !== `all` && tx.type !== appState.ledgerFilter) return false;
+          if (!query) return true;
+          const haystack = [
+            tx.member || ``,
+            tx.fcName || ``,
+            tx.description || ``,
+            tx.category || ``
+          ].join(` `).toLowerCase();
+          return haystack.indexOf(query) !== -1;
+        });
+
+      if (appState.transactions.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong style="color: var(--on-surface);">Your kitty ledger is empty</strong>
+            <p>Select a member above to record the first 1,000 THB contribution, or pull an existing <span style="font-family: var(--font-mono);">data.json</span> from GitHub.</p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="focusContributionForm()">Add First Contribution</button>
+          </div>
+        `;
+        return;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong style="color: var(--on-surface);">No matching transactions</strong>
+            <p>Try clearing your search term or switching the filter back to All.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(function (tx) {
+        const isCredit = tx.type === `credit`;
+        const signed = isCredit ? `+${formatThb(tx.amount)}` : `-${formatThb(tx.amount)}`;
+        const runningBal = stats.runningById[tx.id] !== undefined ? stats.runningById[tx.id] : 0;
+        const badgeTone = isCredit ? `ok` : `alert`;
+        const badgeText = isCredit ? `CREDIT` : `DEBIT`;
+        const title = isCredit
+          ? `${tx.member} — ${tx.description || `Kitty contribution`}`
+          : `${tx.description}`;
+        const whoLine = isCredit
+          ? `Member: ${tx.member}`
+          : `FC: ${tx.fcName || `Coordinator`} · ${tx.category || `Group Supplies`}`;
+
+        return `
+          <article class="tx-row">
+            <div class="tx-main">
+              <div class="tx-title-row">
+                <span class="chip" data-status="${badgeTone}" style="padding: var(--space-2xs) var(--space-sm);">${badgeText}</span>
+                <span class="tx-desc">${escapeHtml(title)}</span>
+              </div>
+              <div class="tx-meta">
+                <span>${escapeHtml(whoLine)}</span>
+                <span>·</span>
+                <time datetime="${escapeHtml(tx.timestamp)}">${escapeHtml(formatTimestamp(tx.timestamp))}</time>
+              </div>
+            </div>
+            <div class="tx-right">
+              <div class="tx-amount-col">
+                <div class="tx-amount ${isCredit ? `is-credit` : `is-debit`}">${signed}</div>
+                <div class="tx-running">Bal: ${formatThb(runningBal)}</div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                onclick="deleteTransaction('${escapeHtml(tx.id)}', this)"
+                aria-label="Remove transaction"
+              >
+                Remove
+              </button>
+            </div>
+          </article>
+        `;
+      }).join(``);
+    }
+
+    function renderSyncBadge() {
+      const btn = document.getElementById(`sync-status-btn`);
+      const label = document.getElementById(`sync-status-label`);
+      const shaEl = document.getElementById(`cfg-sha-display`);
+      if (!btn || !label) return;
+
+      const gh = appState.github;
+      if (!gh.repo) {
+        btn.setAttribute(`data-status`, `info`);
+        label.textContent = `Local Mode · Configure GitHub`;
+      } else if (gh.syncStatus === `synced`) {
+        btn.setAttribute(`data-status`, `ok`);
+        label.textContent = `GitHub Synced · ${gh.repo}`;
+      } else if (gh.syncStatus === `syncing`) {
+        btn.setAttribute(`data-status`, `info`);
+        label.textContent = `Syncing with GitHub…`;
+      } else if (gh.syncStatus === `error`) {
+        btn.setAttribute(`data-status`, `alert`);
+        label.textContent = gh.syncDetail || `GitHub Sync Error`;
+      } else {
+        btn.setAttribute(`data-status`, `warn`);
+        label.textContent = gh.syncDetail || `Pending GitHub Push`;
+      }
+
+      if (shaEl) {
+        shaEl.textContent = gh.remoteSha
+          ? `Remote SHA: ${gh.remoteSha} (${gh.lastSyncAt ? formatTimestamp(gh.lastSyncAt) : `synced`})`
+          : `Remote SHA: not synced yet`;
+      }
+    }
+
+    /* ---------- UI Actions (Hoisted function declarations) ---------- */
+    function switchMode(mode) {
+      appState.mode = mode === `fc` ? `fc` : `member`;
+      const tabMem = document.getElementById(`tab-member`);
+      const tabFc = document.getElementById(`tab-fc`);
+      const formContrib = document.getElementById(`form-contribution`);
+      const formExpense = document.getElementById(`form-expense`);
+      const roleChip = document.getElementById(`active-role-chip`);
+
+      if (tabMem) tabMem.setAttribute(`aria-selected`, appState.mode === `member` ? `true` : `false`);
+      if (tabFc) tabFc.setAttribute(`aria-selected`, appState.mode === `fc` ? `true` : `false`);
+      if (formContrib) formContrib.style.display = appState.mode === `member` ? `flex` : `none`;
+      if (formExpense) formExpense.style.display = appState.mode === `fc` ? `flex` : `none`;
+      if (roleChip) {
+        roleChip.textContent = appState.mode === `member` ? `Member Credit (+)` : `FC Debit (−)`;
+        roleChip.setAttribute(`data-status`, appState.mode === `member` ? `ok` : `alert`);
+      }
+    }
+
+    function selectMember(name) {
+      appState.selectedMember = name;
+      renderMemberPicker(computeTelemetry());
+      persistState();
+    }
+
+    function selectMemberFromDropdown(name) {
+      if (name) selectMember(name);
+    }
+
+    function quickPickMemberForContrib(name) {
+      switchMode(`member`);
+      selectMember(name);
+      const amountInput = document.getElementById(`contrib-amount`);
+      if (amountInput) amountInput.focus();
+    }
+
+    function updateSelectedFc(name) {
+      appState.selectedFc = name;
+      persistState();
+    }
+
+    function setContributionPreset(amount, btn) {
+      const input = document.getElementById(`contrib-amount`);
+      if (input) input.value = String(amount);
+      clearPresetHighlight();
+      if (btn) btn.classList.add(`is-active`);
+    }
+
+    function clearPresetHighlight() {
+      [`preset-1000`, `preset-2000`, `preset-500`].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove(`is-active`);
+      });
+    }
+
+    function focusContributionForm() {
+      switchMode(`member`);
+      const el = document.getElementById(`contrib-amount`);
+      if (el) el.focus();
+    }
+
+    function showGlobalFeedback(message, tone) {
+      const box = document.getElementById(`global-feedback`);
+      const txt = document.getElementById(`global-feedback-text`);
+      if (!box || !txt) return;
+      txt.textContent = message;
+      box.setAttribute(`data-tone`, tone || `info`);
+      box.classList.add(`is-visible`);
+    }
+
+    function dismissFeedback() {
+      const box = document.getElementById(`global-feedback`);
+      if (box) box.classList.remove(`is-visible`);
+    }
+
+    function showInlineError(boxId, textId, message) {
+      const box = document.getElementById(boxId);
+      const txt = document.getElementById(textId);
+      if (!box || !txt) return;
+      if (!message) {
+        box.classList.remove(`is-visible`);
+        txt.textContent = ``;
+        return;
+      }
+      txt.textContent = message;
+      box.classList.add(`is-visible`);
+    }
+
+    async function submitContribution(event) {
+      event.preventDefault();
+      showInlineError(`contrib-error`, `contrib-error-text`, ``);
+
+      const amountEl = document.getElementById(`contrib-amount`);
+      const noteEl = document.getElementById(`contrib-note`);
+      const member = appState.selectedMember;
+      const amount = amountEl ? Number(amountEl.value) : 0;
+
+      if (!member || !MEMBERS.includes(member)) {
+        showInlineError(`contrib-error`, `contrib-error-text`, `Please select your name from the 10-member list.`);
+        return;
+      }
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showInlineError(`contrib-error`, `contrib-error-text`, `Enter a valid THB amount greater than 0.`);
+        return;
+      }
+
+      const stats = computeTelemetry();
+      const roundLabel = amount % appState.roundAmount === 0
+        ? `Round ${stats.activeRound} contribution (${amount / appState.roundAmount}× ${formatThb(appState.roundAmount)})`
+        : `Custom cash contribution`;
+      const note = noteEl && noteEl.value.trim() ? noteEl.value.trim() : roundLabel;
+
+      const tx = {
+        id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        type: `credit`,
+        amount: Math.round(amount),
+        member: member,
+        fcName: ``,
+        category: `Contribution`,
+        description: note,
+        timestamp: new Date().toISOString()
+      };
+
+      appState.transactions.push(tx);
+      if (noteEl) noteEl.value = ``;
+
+      await persistState();
+      renderAll();
+      showGlobalFeedback(`Recorded +${formatThb(tx.amount)} from ${member}.`, `ok`);
+
+      if (appState.github.repo && appState.github.pat && appState.github.autoSync) {
+        await pushToGitHub(`Credit +${tx.amount} THB from ${member}`, false);
+      } else if (appState.github.repo) {
+        appState.github.syncStatus = `pending`;
+        appState.github.syncDetail = `Pending GitHub Push`;
+        renderSyncBadge();
+      }
+    }
+
+    async function submitExpense(event) {
+      event.preventDefault();
+      showInlineError(`expense-error`, `expense-error-text`, ``);
+
+      const fcEl = document.getElementById(`fc-role-select`);
+      const descEl = document.getElementById(`expense-desc`);
+      const catEl = document.getElementById(`expense-category`);
+      const amtEl = document.getElementById(`expense-amount`);
+
+      const fcName = fcEl ? fcEl.value : appState.selectedFc;
+      const description = descEl ? descEl.value.trim() : ``;
+      const category = catEl ? catEl.value : `Meals — Lunch`;
+      const amount = amtEl ? Number(amtEl.value) : 0;
+
+      if (!description) {
+        showInlineError(`expense-error`, `expense-error-text`, `Enter an expense description (e.g. Day 1 - Lunch at Curvy Dining).`);
+        return;
+      }
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showInlineError(`expense-error`, `expense-error-text`, `Enter a valid THB expense amount greater than 0.`);
+        return;
+      }
+
+      const tx = {
+        id: `tx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        type: `debit`,
+        amount: Math.round(amount),
+        member: ``,
+        fcName: fcName,
+        category: category,
+        description: description,
+        timestamp: new Date().toISOString()
+      };
+
+      appState.transactions.push(tx);
+      if (descEl) descEl.value = ``;
+      if (amtEl) amtEl.value = ``;
+
+      await persistState();
+      renderAll();
+      showGlobalFeedback(`Recorded −${formatThb(tx.amount)} expense (${description}) by FC ${fcName}.`, `info`);
+
+      if (appState.github.repo && appState.github.pat && appState.github.autoSync) {
+        await pushToGitHub(`Debit -${tx.amount} THB: ${description}`, false);
+      } else if (appState.github.repo) {
+        appState.github.syncStatus = `pending`;
+        appState.github.syncDetail = `Pending GitHub Push`;
+        renderSyncBadge();
+      }
+    }
+
+    async function deleteTransaction(id, btn) {
+      if (btn && btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        btn.textContent = `Confirm?`;
+        btn.classList.remove(`btn-ghost`);
+        btn.classList.add(`btn-danger`);
+        setTimeout(function () {
+          if (btn && btn.dataset.armed === `true`) {
+            btn.dataset.armed = `false`;
+            btn.textContent = `Remove`;
+            btn.classList.remove(`btn-danger`);
+            btn.classList.add(`btn-ghost`);
+          }
+        }, 3500);
+        return;
+      }
+
+      const idx = appState.transactions.findIndex(function (tx) {
+        return tx.id === id;
+      });
+      if (idx === -1) return;
+      const removed = appState.transactions.splice(idx, 1)[0];
+
+      await persistState();
+      renderAll();
+      showGlobalFeedback(`Removed entry (${formatThb(removed.amount)}).`, `warn`);
+
+      if (appState.github.repo && appState.github.pat && appState.github.autoSync) {
+        await pushToGitHub(`Remove transaction ${removed.id}`, false);
+      }
+    }
+
+    function setLedgerFilter(filter) {
+      appState.ledgerFilter = filter;
+      renderLedger();
+    }
+
+    /* ---------- Settings Modal & GitHub REST API ---------- */
+    function openSettingsModal() {
+      const modal = document.getElementById(`settings-modal`);
+      const repoEl = document.getElementById(`cfg-repo`);
+      const branchEl = document.getElementById(`cfg-branch`);
+      const pathEl = document.getElementById(`cfg-path`);
+      const patEl = document.getElementById(`cfg-pat`);
+      const roundEl = document.getElementById(`cfg-round-amount`);
+      const autoEl = document.getElementById(`cfg-autosync`);
+
+      if (repoEl) repoEl.value = appState.github.repo || ``;
+      if (branchEl) branchEl.value = appState.github.branch || `main`;
+      if (pathEl) pathEl.value = appState.github.path || `data.json`;
+      if (patEl) patEl.value = appState.github.pat || ``;
+      if (roundEl) roundEl.value = String(appState.roundAmount || 1000);
+      if (autoEl) autoEl.value = appState.github.autoSync ? `true` : `false`;
+
+      const preview = document.getElementById(`json-preview`);
+      if (preview) {
+        preview.textContent = JSON.stringify(buildDataJsonPayload(), null, 2);
+      }
+
+      showSettingsFeedback(``, `info`);
+      if (modal) modal.classList.add(`is-open`);
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById(`settings-modal`);
+      if (modal) modal.classList.remove(`is-open`);
+    }
+
+    function togglePatVisibility() {
+      const patEl = document.getElementById(`cfg-pat`);
+      const btn = document.getElementById(`toggle-pat-btn`);
+      if (!patEl || !btn) return;
+      if (patEl.type === `password`) {
+        patEl.type = `text`;
+        btn.textContent = `Hide`;
+      } else {
+        patEl.type = `password`;
+        btn.textContent = `Show`;
+      }
+    }
+
+    function showSettingsFeedback(message, tone) {
+      const box = document.getElementById(`settings-feedback`);
+      const txt = document.getElementById(`settings-feedback-text`);
+      if (!box || !txt) return;
+      if (!message) {
+        box.classList.remove(`is-visible`);
+        txt.textContent = ``;
+        return;
+      }
+      txt.textContent = message;
+      box.setAttribute(`data-tone`, tone || `info`);
+      box.classList.add(`is-visible`);
+    }
+
+    function readSettingsInputs() {
+      const repoEl = document.getElementById(`cfg-repo`);
+      const branchEl = document.getElementById(`cfg-branch`);
+      const pathEl = document.getElementById(`cfg-path`);
+      const patEl = document.getElementById(`cfg-pat`);
+      const roundEl = document.getElementById(`cfg-round-amount`);
+      const autoEl = document.getElementById(`cfg-autosync`);
+
+      appState.github.repo = repoEl ? repoEl.value.trim().replace(/^\/+|\/+$/g, ``) : ``;
+      appState.github.branch = branchEl && branchEl.value.trim() ? branchEl.value.trim() : `main`;
+      appState.github.path = pathEl && pathEl.value.trim() ? pathEl.value.trim().replace(/^\/+/, ``) : `data.json`;
+      appState.github.pat = patEl ? patEl.value.trim() : ``;
+      appState.github.autoSync = autoEl ? autoEl.value === `true` : true;
+
+      const roundVal = roundEl ? Number(roundEl.value) : 1000;
+      if (Number.isFinite(roundVal) && roundVal >= 100) {
+        appState.roundAmount = Math.round(roundVal);
+      }
+    }
+
+    async function saveSettings(event) {
+      event.preventDefault();
+      readSettingsInputs();
+
+      if (appState.github.repo && !/^[^/\s]+\/[^/\s]+$/.test(appState.github.repo)) {
+        showSettingsFeedback(`Repository must use owner/repo format (for example: andy-travel/thailand-2026-kitty).`, `alert`);
+        return;
+      }
+
+      if (!appState.github.repo) {
+        appState.github.syncStatus = `local`;
+        appState.github.syncDetail = `Local Mode · Configure GitHub`;
+      } else if (appState.github.syncStatus === `local`) {
+        appState.github.syncStatus = `pending`;
+        appState.github.syncDetail = `Ready to Pull/Push`;
+      }
+
+      await persistState();
+      renderAll();
+      showSettingsFeedback(`Settings saved. You can now test Pull (GET) or Push (PUT).`, `ok`);
+    }
+
+    function buildGitHubContentsUrl(includeRef) {
+      const repo = appState.github.repo;
+      const path = appState.github.path || `data.json`;
+      const branch = appState.github.branch || `main`;
+      const base = `https://api.github.com/repos/${repo}/contents/${path}`;
+      return includeRef ? `${base}?ref=${encodeURIComponent(branch)}` : base;
+    }
+
+    function buildGitHubHeaders(hasBody) {
+      const headers = {
+        "Accept": `application/vnd.github+json`,
+        "X-GitHub-Api-Version": `2022-11-28`
+      };
+      if (appState.github.pat) {
+        headers[`Authorization`] = `Bearer ${appState.github.pat}`;
+      }
+      if (hasBody) {
+        headers[`Content-Type`] = `application/json`;
+      }
+      return headers;
+    }
+
+    async function pullFromGitHub(fromModal) {
+      if (fromModal) readSettingsInputs();
+      const repo = appState.github.repo;
+      if (!repo || !/^[^/\s]+\/[^/\s]+$/.test(repo)) {
+        if (fromModal) {
+          showSettingsFeedback(`Enter a valid owner/repo before pulling from GitHub.`, `warn`);
+        } else {
+          openSettingsModal();
+          showSettingsFeedback(`Configure your GitHub owner/repo first to pull data.json.`, `info`);
+        }
+        return false;
+      }
+
+      appState.github.syncStatus = `syncing`;
+      renderSyncBadge();
+
+      try {
+        const res = await fetch(buildGitHubContentsUrl(true), {
+          method: `GET`,
+          headers: buildGitHubHeaders(false)
+        });
+
+        if (res.status === 404) {
+          appState.github.remoteSha = ``;
+          appState.github.syncStatus = `pending`;
+          appState.github.syncDetail = `data.json not found on GitHub`;
+          renderSyncBadge();
+          const msg404 = `File ${appState.github.path} does not exist yet in ${repo}. Click "Push Now (PUT)" to initialize it.`;
+          if (fromModal) showSettingsFeedback(msg404, `warn`);
+          else showGlobalFeedback(msg404, `warn`);
+          return false;
+        }
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(function () { return {}; });
+          const reason = errBody.message || `HTTP ${res.status}`;
+          throw new Error(reason);
+        }
+
+        const payload = await res.json();
+        appState.github.remoteSha = payload.sha || ``;
+        const rawJson = decodeBase64Utf8(payload.content || ``);
+        const parsed = JSON.parse(rawJson);
+
+        if (Array.isArray(parsed.transactions)) {
+          appState.transactions = parsed.transactions;
+        }
+        if (typeof parsed.roundAmount === `number` && parsed.roundAmount >= 100) {
+          appState.roundAmount = parsed.roundAmount;
+        }
+
+        appState.github.syncStatus = `synced`;
+        appState.github.lastSyncAt = new Date().toISOString();
+        appState.github.syncDetail = `Synced with ${repo}`;
+
+        await persistState();
+        renderAll();
+
+        const okMsg = `Pulled ${appState.transactions.length} transactions from ${repo}/${appState.github.path}.`;
+        if (fromModal) showSettingsFeedback(okMsg, `ok`);
+        else showGlobalFeedback(okMsg, `ok`);
+        return true;
+      } catch (err) {
+        appState.github.syncStatus = `error`;
+        appState.github.syncDetail = `GitHub GET blocked/failed`;
+        renderSyncBadge();
+        const failMsg = `GitHub GET failed (${err.message}). Changes remain safely saved locally.`;
+        if (fromModal) showSettingsFeedback(failMsg, `alert`);
+        else showGlobalFeedback(failMsg, `warn`);
+        return false;
+      }
+    }
+
+    async function pushToGitHub(commitMessage, fromModal) {
+      if (fromModal) readSettingsInputs();
+      const repo = appState.github.repo;
+      if (!repo || !/^[^/\s]+\/[^/\s]+$/.test(repo)) {
+        if (fromModal) showSettingsFeedback(`Enter a valid owner/repo before pushing.`, `warn`);
+        return false;
+      }
+      if (!appState.github.pat) {
+        if (fromModal) showSettingsFeedback(`Enter a Personal Access Token (contents:write) to push changes.`, `warn`);
+        return false;
+      }
+
+      appState.github.syncStatus = `syncing`;
+      renderSyncBadge();
+
+      try {
+        // If we don't have a SHA yet, check GET first so updates don't hit 422/409
+        if (!appState.github.remoteSha) {
+          const probe = await fetch(buildGitHubContentsUrl(true), {
+            method: `GET`,
+            headers: buildGitHubHeaders(false)
+          });
+          if (probe.ok) {
+            const probeJson = await probe.json();
+            appState.github.remoteSha = probeJson.sha || ``;
+          }
+        }
+
+        const bodyObj = {
+          message: commitMessage || `Update ${appState.github.path} via Trip Kitty`,
+          content: encodeBase64Utf8(JSON.stringify(buildDataJsonPayload(), null, 2)),
+          branch: appState.github.branch || `main`
+        };
+        if (appState.github.remoteSha) {
+          bodyObj.sha = appState.github.remoteSha;
+        }
+
+        const res = await fetch(buildGitHubContentsUrl(false), {
+          method: `PUT`,
+          headers: buildGitHubHeaders(true),
+          body: JSON.stringify(bodyObj)
+        });
+
+        if (res.status === 409) {
+          appState.github.remoteSha = ``;
+          appState.github.syncStatus = `error`;
+          appState.github.syncDetail = `SHA conflict — Pull GET first`;
+          renderSyncBadge();
+          const conflictMsg = `Remote file changed on GitHub (409 conflict). Run Pull GET to fetch the latest SHA before pushing.`;
+          if (fromModal) showSettingsFeedback(conflictMsg, `warn`);
+          else showGlobalFeedback(conflictMsg, `warn`);
+          return false;
+        }
+
+        if (!res.ok) {
+          const errBody = await res.json().catch(function () { return {}; });
+          throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
+
+        const result = await res.json();
+        appState.github.remoteSha = (result.content && result.content.sha) ? result.content.sha : appState.github.remoteSha;
+        appState.github.syncStatus = `synced`;
+        appState.github.lastSyncAt = new Date().toISOString();
+        appState.github.syncDetail = `Synced with ${repo}`;
+
+        await persistState();
+        renderSyncBadge();
+
+        const okMsg = `Pushed ${appState.transactions.length} transactions to GitHub (${repo}).`;
+        if (fromModal) showSettingsFeedback(okMsg, `ok`);
+        else showGlobalFeedback(okMsg, `ok`);
+        return true;
+      } catch (err) {
+        appState.github.syncStatus = `error`;
+        appState.github.syncDetail = `GitHub PUT blocked/failed`;
+        renderSyncBadge();
+        const failMsg = `GitHub PUT failed (${err.message}). Your entry is safely stored locally and exportable as data.json.`;
+        if (fromModal) showSettingsFeedback(failMsg, `alert`);
+        else showGlobalFeedback(failMsg, `warn`);
+        return false;
+      }
+    }
+
+    /* ---------- Export & Reset ---------- */
+    function exportJsonFile() {
+      const content = JSON.stringify(buildDataJsonPayload(), null, 2);
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: content,
+          contentType: `text/plain`,
+          encoding: `UTF-8`,
+          filename: `data.json`
+        });
+      } else {
+        const blob = new Blob([content], { type: `application/json` });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement(`a`);
+        a.href = url;
+        a.download = `data.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      showGlobalFeedback(`Downloaded flat data.json snapshot.`, `ok`);
+    }
+
+    function exportCsvFile() {
+      const stats = computeTelemetry();
+      const rows = [[`Timestamp`, `Type`, `Member`, `FC`, `Category`, `Description`, `Amount_THB`, `Running_Balance_THB`]];
+      const sorted = appState.transactions.slice().sort(function (a, b) {
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      });
+      sorted.forEach(function (tx) {
+        const signed = tx.type === `credit` ? tx.amount : -tx.amount;
+        const bal = stats.runningById[tx.id] !== undefined ? stats.runningById[tx.id] : 0;
+        const cols = [
+          tx.timestamp,
+          tx.type,
+          tx.member || ``,
+          tx.fcName || ``,
+          tx.category || ``,
+          tx.description || ``,
+          String(signed),
+          String(bal)
+        ].map(function (val) {
+          return `"${String(val).replace(/"/g, `""`)}"`;
+        });
+        rows.push(cols);
+      });
+      const csv = rows.map(function (r) { return r.join(`,`); }).join(`\n`);
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: csv,
+          contentType: `text/csv`,
+          encoding: `UTF-8`,
+          filename: `trip-kitty-ledger.csv`
+        });
+      } else {
+        const blob = new Blob([csv], { type: `text/csv` });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement(`a`);
+        a.href = url;
+        a.download = `trip-kitty-ledger.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      showGlobalFeedback(`Exported CSV ledger.`, `ok`);
+    }
+
+    async function copyJsonPayload() {
+      const jsonStr = JSON.stringify(buildDataJsonPayload(), null, 2);
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === `function`) {
+        try {
+          await navigator.clipboard.writeText(jsonStr);
+          showSettingsFeedback(`Copied data.json to clipboard.`, `ok`);
+          return;
+        } catch (err) {
+          console.warn(`Clipboard copy failed:`, err);
+        }
+      }
+      showSettingsFeedback(`Select and copy the JSON preview box below.`, `info`);
+    }
+
+    async function resetLedgerData(btn) {
+      if (btn && btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        btn.textContent = `Click again to clear all entries`;
+        btn.classList.remove(`btn-ghost`);
+        btn.classList.add(`btn-danger`);
+        setTimeout(function () {
+          if (btn && btn.dataset.armed === `true`) {
+            btn.dataset.armed = `false`;
+            btn.textContent = `Reset Ledger`;
+            btn.classList.remove(`btn-danger`);
+            btn.classList.add(`btn-ghost`);
+          }
+        }, 3500);
+        return;
+      }
+
+      if (btn) {
+        btn.dataset.armed = `false`;
+        btn.textContent = `Reset Ledger`;
+        btn.classList.remove(`btn-danger`);
+        btn.classList.add(`btn-ghost`);
+      }
+
+      appState.transactions = [];
+      await persistState();
+      renderAll();
+      showSettingsFeedback(`All local ledger entries cleared.`, `warn`);
+    }
+
+    /* ---------- Initialization ---------- */
+    async function initApp() {
+      await loadInitialState();
+      renderAll();
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener(`keydown`, function (e) {
+      if (e.key === `Escape`) closeSettingsModal();
+    });
+
+    initApp();
+  </script>
+</body>
+</html>
